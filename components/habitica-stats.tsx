@@ -48,7 +48,7 @@ export function HabiticaStats() {
   }
 
   return (
-    <canvas ref={canvasRef} width={600} height={400} className="w-full max-w-[600px]" />
+    <canvas ref={canvasRef} width={600} height={350} className="w-full max-w-[600px]" />
   )
 }
 
