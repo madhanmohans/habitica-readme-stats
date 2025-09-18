@@ -6,6 +6,7 @@ export async function GET() {
   try {
     const response = await fetch(`${HABITICA_API_URL}/user`, {
       headers: {
+        'x-client': 'habitica-readme-stats-1.0.0',
         'x-api-user': process.env.HABITICA_USER_ID!,
         'x-api-key': process.env.HABITICA_API_TOKEN!,
         'Content-Type': 'application/json'
