@@ -1,13 +1,19 @@
 interface ProgressBarProps {
-  value: number
-  max: number
-  className?: string
-  color: string
-  backgroundColor: string
+  value: number;
+  max: number;
+  className?: string;
+  color: string;
+  backgroundColor: string;
 }
 
-export function ProgressBar({ value, max, className, color, backgroundColor }: ProgressBarProps) {
-  const percentage = (value / max) * 100
+export function ProgressBar({
+  value,
+  max,
+  className,
+  color,
+  backgroundColor,
+}: ProgressBarProps) {
+  const percentage = (value / max) * 100;
 
   return (
     <div className={`h-4 rounded-full ${backgroundColor} ${className}`}>
@@ -16,6 +22,5 @@ export function ProgressBar({ value, max, className, color, backgroundColor }: P
         style={{ width: `${Math.min(100, percentage)}%` }}
       />
     </div>
-  )
+  );
 }
-
