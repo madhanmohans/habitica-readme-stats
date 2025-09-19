@@ -1,4 +1,4 @@
-import { HabiticaStats } from "@/components/habitica-stats";
+import { HabiticaStats } from "@/components/HabiticaStats";
 
 export default function Home() {
   return (
