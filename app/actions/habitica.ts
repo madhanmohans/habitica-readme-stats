@@ -38,6 +38,7 @@ export async function getHabiticaStatsWithCredentials(
   apiToken: string
 ): Promise<HabiticaStats> {
   try {
+    console.log("Making request to Habitica API...");
     const response = await fetch(`${HABITICA_API_URL}/user`, {
       headers: {
         "x-client": "habitica-readme-stats-1.0.0",
@@ -47,29 +48,54 @@ export async function getHabiticaStatsWithCredentials(
       },
     });
 
+    console.log("Response status:", response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error("API Error Response:", errorText);
       throw new Error(
-        `Failed to fetch Habitica stats: ${response.status} ${response.statusText} - ${errorText}`,
+        `Habitica API returned ${response.status}: ${response.statusText}. ${errorText}`,
       );
     }
 
     const data = await response.json();
+    console.log("Raw API response structure:", {
+      hasData: !!data.data,
+      hasStats: !!data.data?.stats,
+      dataKeys: data.data ? Object.keys(data.data) : [],
+      statsKeys: data.data?.stats ? Object.keys(data.data.stats) : []
+    });
+
+    if (!data.data || !data.data.stats) {
+      throw new Error("Invalid response structure from Habitica API");
+    }
+
     const stats = data.data.stats;
 
-    return {
-      hp: stats.hp,
-      maxHealth: stats.maxHealth,
-      mp: stats.mp,
-      maxMP: stats.maxMP,
-      exp: stats.exp,
-      toNextLevel: stats.toNextLevel,
-      lvl: stats.lvl,
-      gp: Math.floor(stats.gp),
-      class: stats.class,
+    // Validate required fields
+    const requiredFields = ['hp', 'maxHealth', 'mp', 'maxMP', 'exp', 'toNextLevel', 'lvl', 'class'];
+    const missingFields = requiredFields.filter(field => stats[field] === undefined);
+    
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields from Habitica API: ${missingFields.join(', ')}`);
+    }
+
+    const result = {
+      hp: Number(stats.hp) || 0,
+      maxHealth: Number(stats.maxHealth) || 50,
+      mp: Number(stats.mp) || 0,
+      maxMP: Number(stats.maxMP) || 0,
+      exp: Number(stats.exp) || 0,
+      toNextLevel: Number(stats.toNextLevel) || 100,
+      lvl: Number(stats.lvl) || 1,
+      gp: Math.floor(Number(stats.gp) || 0),
+      class: String(stats.class || 'warrior'),
     };
+
+    console.log("Processed stats:", result);
+    return result;
   } catch (error) {
-    console.error("Error fetching Habitica stats:", error);
+    console.error("Error in getHabiticaStatsWithCredentials:", error);
     throw error;
   }
 }

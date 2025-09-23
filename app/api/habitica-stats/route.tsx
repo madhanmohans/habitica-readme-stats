@@ -1,6 +1,86 @@
 import { ImageResponse } from "@vercel/og";
-import { getHabiticaStatsWithCredentials } from "@/app/actions/habitica";
 import { NextRequest } from "next/server";
+
+const HABITICA_API_URL = "https://habitica.com/api/v3";
+
+interface HabiticaStats {
+  hp: number;
+  maxHealth: number;
+  mp: number;
+  maxMP: number;
+  exp: number;
+  toNextLevel: number;
+  lvl: number;
+  gp: number;
+  class: string;
+}
+
+async function getHabiticaStatsWithCredentials(
+  userId: string,
+  apiToken: string
+): Promise<HabiticaStats> {
+  try {
+    console.log("Making request to Habitica API...");
+    const response = await fetch(`${HABITICA_API_URL}/user`, {
+      headers: {
+        "x-client": "habitica-readme-stats-1.0.0",
+        "x-api-user": userId,
+        "x-api-key": apiToken,
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("Response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error Response:", errorText);
+      throw new Error(
+        `Habitica API returned ${response.status}: ${response.statusText}. ${errorText}`,
+      );
+    }
+
+    const data = await response.json();
+    console.log("Raw API response structure:", {
+      hasData: !!data.data,
+      hasStats: !!data.data?.stats,
+      dataKeys: data.data ? Object.keys(data.data) : [],
+      statsKeys: data.data?.stats ? Object.keys(data.data.stats) : []
+    });
+
+    if (!data.data || !data.data.stats) {
+      throw new Error("Invalid response structure from Habitica API");
+    }
+
+    const stats = data.data.stats;
+
+    // Validate required fields
+    const requiredFields = ['hp', 'maxHealth', 'mp', 'maxMP', 'exp', 'toNextLevel', 'lvl', 'class'];
+    const missingFields = requiredFields.filter(field => stats[field] === undefined);
+    
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields from Habitica API: ${missingFields.join(', ')}`);
+    }
+
+    const result = {
+      hp: Number(stats.hp) || 0,
+      maxHealth: Number(stats.maxHealth) || 50,
+      mp: Number(stats.mp) || 0,
+      maxMP: Number(stats.maxMP) || 0,
+      exp: Number(stats.exp) || 0,
+      toNextLevel: Number(stats.toNextLevel) || 100,
+      lvl: Number(stats.lvl) || 1,
+      gp: Math.floor(Number(stats.gp) || 0),
+      class: String(stats.class || 'warrior'),
+    };
+
+    console.log("Processed stats:", result);
+    return result;
+  } catch (error) {
+    console.error("Error in getHabiticaStatsWithCredentials:", error);
+    throw error;
+  }
+}
 
 export const runtime = "edge";
 
@@ -87,13 +167,52 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Fetching Habitica stats...');
-    const stats = await getHabiticaStatsWithCredentials(userId, apiToken);
-    console.log('Stats fetched successfully:', { 
-      class: stats.class, 
-      level: stats.lvl, 
-      hp: stats.hp, 
-      maxHealth: stats.maxHealth 
-    });
+    let stats;
+    try {
+      stats = await getHabiticaStatsWithCredentials(userId, apiToken);
+      console.log('Stats fetched successfully:', { 
+        class: stats.class, 
+        level: stats.lvl, 
+        hp: stats.hp, 
+        maxHealth: stats.maxHealth 
+      });
+    } catch (apiError) {
+      console.error('Error fetching Habitica stats:', apiError);
+      
+      // Return a specific error image for API failures
+      return new ImageResponse(
+        (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#2D1B47",
+              fontFamily: "monospace",
+              color: "#F74E52",
+              padding: "20px",
+            }}
+          >
+            <h2 style={{ fontSize: "24px", margin: "0 0 20px 0" }}>
+              Habitica API Error
+            </h2>
+            <p style={{ fontSize: "14px", textAlign: "center", margin: "0", maxWidth: "80%" }}>
+              {apiError instanceof Error ? apiError.message : "Failed to fetch Habitica data"}
+            </p>
+            <p style={{ fontSize: "12px", textAlign: "center", margin: "10px 0 0 0", color: "#999" }}>
+              Check your userId and apiToken
+            </p>
+          </div>
+        ),
+        {
+          width: 600,
+          height: 400,
+        }
+      );
+    }
 
     // Theme configuration
     const themes = {
