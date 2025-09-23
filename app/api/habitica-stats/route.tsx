@@ -7,7 +7,36 @@ export const runtime = "edge";
 export async function GET(request: NextRequest) {
   try {
     console.log('API endpoint called with URL:', request.url);
+    
+    // For debugging - return a simple image first
     const { searchParams } = new URL(request.url);
+    const debug = searchParams.get('debug');
+    
+    if (debug === 'simple') {
+      return new ImageResponse(
+        (
+          <div
+            style={{
+              width: 600,
+              height: 400,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#2D1B47",
+              color: "white",
+              fontSize: "24px",
+            }}
+          >
+            Simple Debug Image Works! 🎉
+          </div>
+        ),
+        {
+          width: 600,
+          height: 400,
+        }
+      );
+    }
+    
     const userId = searchParams.get('userId');
     const apiToken = searchParams.get('apiToken');
     const theme = searchParams.get('theme') || 'default';
