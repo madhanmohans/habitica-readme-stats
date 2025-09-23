@@ -116,6 +116,97 @@ export async function GET(request: NextRequest) {
         }
       );
     }
+
+    // Test with mock data instead of API call
+    if (debug === 'mock') {
+      const mockStats = {
+        hp: 45,
+        maxHealth: 50,
+        mp: 32,
+        maxMP: 40,
+        exp: 180,
+        toNextLevel: 250,
+        lvl: 15,
+        gp: 125,
+        class: 'mage',
+      };
+
+      const themes = {
+        default: { background: "#2D1B47", text: "white", subtext: "#D3D3D3" },
+        dark: { background: "#0f0f23", text: "#cccccc", subtext: "#999999" },
+        light: { background: "#ffffff", text: "#24292e", subtext: "#586069" },
+      };
+      
+      const theme = searchParams.get('theme') || 'default';
+      const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+
+      return new ImageResponse(
+        (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: currentTheme.background,
+              fontFamily: "monospace",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "20px",
+              }}
+            >
+              <div>
+                <h2 style={{ color: currentTheme.text, fontSize: "24px", margin: "0" }}>
+                  @{mockStats.class.toLowerCase()} (MOCK DATA)
+                </h2>
+                <p
+                  style={{
+                    color: currentTheme.subtext,
+                    fontSize: "18px",
+                    margin: "5px 0 0 0",
+                  }}
+                >
+                  Level {mockStats.lvl} {mockStats.class}
+                </p>
+              </div>
+            </div>
+            <div style={{ width: "80%", maxWidth: "400px" }}>
+              <MockProgressBar
+                label="❤️ Health"
+                value={mockStats.hp}
+                max={mockStats.maxHealth}
+                color="#F74E52"
+                textColor={currentTheme.subtext}
+              />
+              <MockProgressBar
+                label="⭐ Experience"
+                value={mockStats.exp}
+                max={mockStats.toNextLevel}
+                color="#FFB445"
+                textColor={currentTheme.subtext}
+              />
+              <MockProgressBar
+                label="💎 Mana"
+                value={mockStats.mp}
+                max={mockStats.maxMP}
+                color="#50B5E9"
+                textColor={currentTheme.subtext}
+              />
+            </div>
+          </div>
+        ),
+        {
+          width: 600,
+          height: 400,
+        }
+      );
+    }
     
     const userId = searchParams.get('userId');
     const apiToken = searchParams.get('apiToken');
@@ -169,7 +260,16 @@ export async function GET(request: NextRequest) {
     console.log('Fetching Habitica stats...');
     let stats;
     try {
-      stats = await getHabiticaStatsWithCredentials(userId, apiToken);
+      // Add a timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('API call timed out after 10 seconds')), 10000)
+      );
+      
+      stats = await Promise.race([
+        getHabiticaStatsWithCredentials(userId, apiToken),
+        timeoutPromise
+      ]) as HabiticaStats;
+      
       console.log('Stats fetched successfully:', { 
         class: stats.class, 
         level: stats.lvl, 
@@ -395,6 +495,57 @@ function ProgressBar({
             height: "100%",
             backgroundColor: color,
             transition: "width 0.3s ease-in-out",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MockProgressBar({
+  label,
+  value,
+  max,
+  color,
+  textColor,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+  textColor: string;
+}) {
+  const percentage = (value / max) * 100;
+
+  return (
+    <div style={{ marginBottom: "20px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          color: textColor,
+          fontSize: "14px",
+          marginBottom: "5px",
+        }}
+      >
+        <span>{label}</span>
+        <span>
+          {Math.floor(value)} / {max}
+        </span>
+      </div>
+      <div
+        style={{
+          height: "20px",
+          backgroundColor: "#4D3B67",
+          borderRadius: "10px",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            width: `${Math.min(100, percentage)}%`,
+            height: "100%",
+            backgroundColor: color,
           }}
         />
       </div>
