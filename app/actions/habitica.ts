@@ -23,11 +23,26 @@ export async function getHabiticaStats(): Promise<HabiticaStats> {
       );
     }
 
+    return await getHabiticaStatsWithCredentials(
+      process.env.HABITICA_USER_ID!,
+      process.env.HABITICA_API_TOKEN!
+    );
+  } catch (error) {
+    console.error("Error fetching Habitica stats:", error);
+    throw error;
+  }
+}
+
+export async function getHabiticaStatsWithCredentials(
+  userId: string,
+  apiToken: string
+): Promise<HabiticaStats> {
+  try {
     const response = await fetch(`${HABITICA_API_URL}/user`, {
       headers: {
         "x-client": "habitica-readme-stats-1.0.0",
-        "x-api-user": process.env.HABITICA_USER_ID!,
-        "x-api-key": process.env.HABITICA_API_TOKEN!,
+        "x-api-user": userId,
+        "x-api-key": apiToken,
         "Content-Type": "application/json",
       },
     });

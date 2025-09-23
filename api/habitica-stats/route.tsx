@@ -1,14 +1,71 @@
 import { ImageResponse } from "@vercel/og";
-import { getHabiticaStats } from "@/app/actions/habitica";
+import { getHabiticaStatsWithCredentials } from "@/app/actions/habitica";
 import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
 export async function GET(request: NextRequest) {
   try {
-    const stats = await getHabiticaStats();
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    const apiToken = searchParams.get('apiToken');
+    const theme = searchParams.get('theme') || 'default';
+    
+    if (!userId || !apiToken) {
+      return new ImageResponse(
+        (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#2D1B47",
+              fontFamily: "monospace",
+              color: "white",
+            }}
+          >
+            <h2 style={{ fontSize: "24px", margin: "0 0 20px 0" }}>
+              Missing Parameters
+            </h2>
+            <p style={{ fontSize: "16px", textAlign: "center", margin: "0" }}>
+              Please provide userId and apiToken query parameters
+            </p>
+          </div>
+        ),
+        {
+          width: 600,
+          height: 400,
+        }
+      );
+    }
 
-    return new ImageResponse(
+    const stats = await getHabiticaStatsWithCredentials(userId, apiToken);
+
+    // Theme configuration
+    const themes = {
+      default: {
+        background: "#2D1B47",
+        text: "white",
+        subtext: "#D3D3D3",
+      },
+      dark: {
+        background: "#0f0f23",
+        text: "#cccccc",
+        subtext: "#999999",
+      },
+      light: {
+        background: "#ffffff",
+        text: "#24292e",
+        subtext: "#586069",
+      },
+    };
+
+    const currentTheme = themes[theme as keyof typeof themes] || themes.default;
+
+    const response = new ImageResponse(
       (
         <div
           style={{
@@ -18,7 +75,7 @@ export async function GET(request: NextRequest) {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#2D1B47",
+            backgroundColor: currentTheme.background,
             fontFamily: "monospace",
           }}
         >
@@ -37,12 +94,12 @@ export async function GET(request: NextRequest) {
               style={{ marginRight: "20px" }}
             />
             <div>
-              <h2 style={{ color: "white", fontSize: "24px", margin: "0" }}>
+              <h2 style={{ color: currentTheme.text, fontSize: "24px", margin: "0" }}>
                 @{stats.class.toLowerCase()}
               </h2>
               <p
                 style={{
-                  color: "#D3D3D3",
+                  color: currentTheme.subtext,
                   fontSize: "18px",
                   margin: "5px 0 0 0",
                 }}
@@ -57,18 +114,21 @@ export async function GET(request: NextRequest) {
               value={stats.hp}
               max={stats.maxHealth}
               color="#F74E52"
+              textColor={currentTheme.subtext}
             />
             <ProgressBar
               label="⭐ Experience"
               value={stats.exp}
               max={stats.toNextLevel}
               color="#FFB445"
+              textColor={currentTheme.subtext}
             />
             <ProgressBar
               label="💎 Mana"
               value={stats.mp}
               max={stats.maxMP}
               color="#50B5E9"
+              textColor={currentTheme.subtext}
             />
           </div>
         </div>
@@ -76,13 +136,46 @@ export async function GET(request: NextRequest) {
       {
         width: 600,
         height: 400,
+        headers: {
+          'Cache-Control': 'public, max-age=1800, s-maxage=1800', // Cache for 30 minutes
+          'Content-Type': 'image/png',
+        },
       },
     );
+
+    return response;
   } catch (error) {
     console.error("Error generating image:", error);
-    return new Response(
-      `Error generating image: ${error instanceof Error ? error.message : "Unknown error"}`,
-      { status: 500 },
+    
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#2D1B47",
+            fontFamily: "monospace",
+            color: "#F74E52",
+          }}
+        >
+          <h2 style={{ fontSize: "24px", margin: "0 0 20px 0" }}>
+            Error
+          </h2>
+          <p style={{ fontSize: "14px", textAlign: "center", margin: "0", maxWidth: "80%" }}>
+            {errorMessage}
+          </p>
+        </div>
+      ),
+      {
+        width: 600,
+        height: 400,
+      }
     );
   }
 }
@@ -92,11 +185,13 @@ function ProgressBar({
   value,
   max,
   color,
+  textColor,
 }: {
   label: string;
   value: number;
   max: number;
   color: string;
+  textColor: string;
 }) {
   const percentage = (value / max) * 100;
 
@@ -106,7 +201,7 @@ function ProgressBar({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          color: "#D3D3D3",
+          color: textColor,
           fontSize: "14px",
           marginBottom: "5px",
         }}
