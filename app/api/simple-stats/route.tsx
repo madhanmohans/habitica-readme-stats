@@ -1,9 +1,8 @@
 import { ImageResponse } from "@vercel/og";
-import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Very simple approach - just return a hardcoded stats image for now
     return new ImageResponse(
@@ -159,7 +158,7 @@ export async function GET(request: NextRequest) {
         height: 400,
       }
     );
-  } catch (error) {
+  } catch {
     return new Response("Error generating image", { status: 500 });
   }
 }
