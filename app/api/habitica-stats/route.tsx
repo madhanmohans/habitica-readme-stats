@@ -6,12 +6,23 @@ export const runtime = "edge";
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('API endpoint called with URL:', request.url);
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const apiToken = searchParams.get('apiToken');
     const theme = searchParams.get('theme') || 'default';
     
+    console.log('Parameters received:', { 
+      userId: userId ? 'provided' : 'missing', 
+      apiToken: apiToken ? 'provided' : 'missing',
+      theme 
+    });
+    
     if (!userId || !apiToken) {
+      const missingParams = [];
+      if (!userId) missingParams.push('userId');
+      if (!apiToken) missingParams.push('apiToken');
+      
       return new ImageResponse(
         (
           <div
@@ -25,13 +36,17 @@ export async function GET(request: NextRequest) {
               backgroundColor: "#2D1B47",
               fontFamily: "monospace",
               color: "white",
+              padding: "20px",
             }}
           >
             <h2 style={{ fontSize: "24px", margin: "0 0 20px 0" }}>
               Missing Parameters
             </h2>
-            <p style={{ fontSize: "16px", textAlign: "center", margin: "0" }}>
-              Please provide userId and apiToken query parameters
+            <p style={{ fontSize: "16px", textAlign: "center", margin: "0 0 10px 0" }}>
+              Missing: {missingParams.join(', ')}
+            </p>
+            <p style={{ fontSize: "12px", textAlign: "center", margin: "0", color: "#D3D3D3" }}>
+              URL: {request.url}
             </p>
           </div>
         ),
@@ -42,7 +57,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log('Fetching Habitica stats...');
     const stats = await getHabiticaStatsWithCredentials(userId, apiToken);
+    console.log('Stats fetched successfully:', { 
+      class: stats.class, 
+      level: stats.lvl, 
+      hp: stats.hp, 
+      maxHealth: stats.maxHealth 
+    });
 
     // Theme configuration
     const themes = {
