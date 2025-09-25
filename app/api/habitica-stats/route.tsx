@@ -70,20 +70,20 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   ctx.arc(avatarX, avatarY, avatarRadius, 0, 2 * Math.PI);
   ctx.fill();
   
-  // Game controller emoji (simplified as text)
+  // Game controller icon (text-based)
   ctx.fillStyle = 'white';
-  ctx.font = 'bold 32px Arial';
+  ctx.font = 'bold 24px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('🎮', avatarX, avatarY + 10);
+  ctx.fillText('GAME', avatarX, avatarY + 5);
   
   // Character info
   ctx.fillStyle = theme.text;
-  ctx.font = 'bold 28px Arial';
+  ctx.font = 'bold 28px sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText(`@${stats.class.toLowerCase()}`, avatarX + 50, avatarY - 10);
   
   ctx.fillStyle = theme.subtext;
-  ctx.font = '18px Arial';
+  ctx.font = '18px sans-serif';
   ctx.fillText(`Level ${stats.lvl} ${stats.class}`, avatarX + 50, avatarY + 15);
   
   // Progress bars
@@ -95,8 +95,8 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   
   // Health bar
   ctx.fillStyle = theme.subtext;
-  ctx.font = '14px Arial';
-  ctx.fillText('❤️ Health', barsX, barsStartY - 5);
+  ctx.font = '14px sans-serif';
+  ctx.fillText('Health', barsX, barsStartY - 5);
   ctx.textAlign = 'right';
   ctx.fillText(`${Math.floor(stats.hp)} / ${stats.maxHealth}`, barsX + barWidth, barsStartY - 5);
   ctx.textAlign = 'left';
@@ -106,7 +106,7 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   // Experience bar
   const expY = barsStartY + barSpacing;
   ctx.fillStyle = theme.subtext;
-  ctx.fillText('⭐ Experience', barsX, expY - 5);
+  ctx.fillText('Experience', barsX, expY - 5);
   ctx.textAlign = 'right';
   ctx.fillText(`${Math.floor(stats.exp)} / ${stats.toNextLevel}`, barsX + barWidth, expY - 5);
   ctx.textAlign = 'left';
@@ -116,7 +116,7 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   // Mana bar
   const manaY = barsStartY + (barSpacing * 2);
   ctx.fillStyle = theme.subtext;
-  ctx.fillText('💎 Mana', barsX, manaY - 5);
+  ctx.fillText('Mana', barsX, manaY - 5);
   ctx.textAlign = 'right';
   ctx.fillText(`${Math.floor(stats.mp)} / ${stats.maxMP}`, barsX + barWidth, manaY - 5);
   ctx.textAlign = 'left';
@@ -136,7 +136,7 @@ function drawSimpleMessage(message: string, bgColor: string = '#2D1B47', textCol
   
   // Text
   ctx.fillStyle = textColor;
-  ctx.font = 'bold 24px Arial';
+  ctx.font = 'bold 24px sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(message, 300, 200);
   
@@ -153,13 +153,13 @@ function drawDebugInfo(envStatus: { hasUserId: boolean; hasApiToken: boolean; ru
   
   // Title
   ctx.fillStyle = 'white';
-  ctx.font = 'bold 20px Arial';
+  ctx.font = 'bold 20px sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('Environment Variables Status:', 300, 150);
   
-  ctx.font = '16px Arial';
-  ctx.fillText(`User ID: ${envStatus.hasUserId ? '✅ Set' : '❌ Missing'}`, 300, 190);
-  ctx.fillText(`API Token: ${envStatus.hasApiToken ? '✅ Set' : '❌ Missing'}`, 300, 220);
+  ctx.font = '16px sans-serif';
+  ctx.fillText(`User ID: ${envStatus.hasUserId ? 'Set' : 'Missing'}`, 300, 190);
+  ctx.fillText(`API Token: ${envStatus.hasApiToken ? 'Set' : 'Missing'}`, 300, 220);
   ctx.fillText(`Runtime: ${envStatus.runtime || 'local'}`, 300, 250);
   
   return canvas.toBuffer('image/png');
@@ -258,11 +258,11 @@ export async function GET(request: NextRequest) {
       
       // Error text
       ctx.fillStyle = '#F74E52';
-      ctx.font = 'bold 24px Arial';
+      ctx.font = 'bold 24px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('Configuration Error', 300, 150);
       
-      ctx.font = '14px Arial';
+      ctx.font = '14px sans-serif';
       ctx.fillStyle = 'white';
       // Wrap long error messages
       const words = errorMessage.split(' ');
@@ -283,7 +283,7 @@ export async function GET(request: NextRequest) {
       }
       ctx.fillText(line, 300, y);
       
-      ctx.font = '12px Arial';
+      ctx.font = '12px sans-serif';
       ctx.fillStyle = '#999';
       ctx.fillText('Please check environment variables: HABITICA_USER_ID & HABITICA_API_TOKEN', 300, y + 40);
       
