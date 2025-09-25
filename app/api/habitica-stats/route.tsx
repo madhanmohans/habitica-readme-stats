@@ -15,11 +15,17 @@ interface HabiticaStats {
   class: string;
 }
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
     console.log('Habitica Stats API called');
+    console.log('Environment variables check:', {
+      hasUserId: !!process.env.HABITICA_USER_ID,
+      hasApiToken: !!process.env.HABITICA_API_TOKEN,
+      nodeEnv: process.env.NODE_ENV,
+      runtime: process.env.VERCEL_ENV
+    });
     
     // Get theme from query parameters (only non-sensitive parameter allowed)
     const { searchParams } = new URL(request.url);
@@ -51,6 +57,40 @@ export async function GET(request: NextRequest) {
           height: 400,
           headers: {
             'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+            'Content-Type': 'image/png',
+          },
+        }
+      );
+    }
+
+    if (debug === 'env') {
+      return new ImageResponse(
+        (
+          <div
+            style={{
+              width: 600,
+              height: 400,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#2D1B47",
+              color: "white",
+              fontSize: "16px",
+              padding: "20px",
+            }}
+          >
+            <div>Environment Variables Status:</div>
+            <div>User ID: {process.env.HABITICA_USER_ID ? '✅ Set' : '❌ Missing'}</div>
+            <div>API Token: {process.env.HABITICA_API_TOKEN ? '✅ Set' : '❌ Missing'}</div>
+            <div>Runtime: {process.env.VERCEL_ENV || 'local'}</div>
+          </div>
+        ),
+        {
+          width: 600,
+          height: 400,
+          headers: {
+            'Cache-Control': 'public, max-age=300, s-maxage=300',
             'Content-Type': 'image/png',
           },
         }
