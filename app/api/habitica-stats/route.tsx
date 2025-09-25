@@ -52,7 +52,7 @@ function drawProgressBar(ctx: CanvasRenderingContext2D, x: number, y: number, wi
 }
 
 function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
-  const canvas = createCanvas(600, 400);
+  const canvas = createCanvas(500, 300);
   const ctx = canvas.getContext('2d');
   
   // Configure canvas for better text rendering
@@ -61,62 +61,44 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   
   // Background
   ctx.fillStyle = theme.background;
-  ctx.fillRect(0, 0, 600, 400);
+  ctx.fillRect(0, 0, 500, 300);
   
   // Character avatar circle
-  const avatarX = 150;
-  const avatarY = 100;
-  const avatarRadius = 40;
-  
-  ctx.fillStyle = '#8B5CF6';
-  ctx.beginPath();
-  ctx.arc(avatarX, avatarY, avatarRadius, 0, 2 * Math.PI);
-  ctx.fill();
-  
-  // Game controller icon (text-based)
-  ctx.fillStyle = 'white';
-  ctx.font = '20px Arial, Helvetica, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('GAME', avatarX, avatarY);
+  const avatarX = 100;
+  const avatarY = 50;
   
   // Character info - using only basic ASCII characters
   ctx.fillStyle = theme.text;
-  ctx.font = '28px Arial, Helvetica, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  const username = String(stats.class).toLowerCase();
-  ctx.fillText(username, avatarX + 50, avatarY - 10);
-  
-  ctx.fillStyle = theme.subtext;
-  ctx.font = '18px Arial, Helvetica, sans-serif';
-  const levelText = `Level ${Number(stats.lvl)} ${String(stats.class)}`;
-  ctx.fillText(levelText, avatarX + 50, avatarY + 15);
+  ctx.font = '24px sans-serif mono';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const username = String(stats.class);
+  const levelText = `level ${Number(stats.lvl)}`;
+  ctx.fillText(username + ' ' + levelText, avatarX + 45, avatarY);
   
   // Progress bars
-  const barsStartY = 180;
+  const barsStartY = 120;
   const barHeight = 20;
   const barWidth = 320;
   const barSpacing = 45;
-  const barsX = (600 - barWidth) / 2;
+  const barsX = (500 - barWidth) / 2;
   
   // Health bar
   ctx.fillStyle = theme.subtext;
-  ctx.font = '14px Arial, Helvetica, sans-serif';
+  ctx.font = '14px sans-serif mono';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Health', barsX, barsStartY - 5);
+  ctx.fillText('health', barsX, barsStartY - 5);
   ctx.textAlign = 'right';
   const healthText = `${Math.floor(Number(stats.hp))} / ${Number(stats.maxHealth)}`;
   ctx.fillText(healthText, barsX + barWidth, barsStartY - 5);
-  
   drawProgressBar(ctx, barsX, barsStartY + 5, barWidth, barHeight, stats.hp, stats.maxHealth, '#F74E52', '#4D3B67');
-  
+
   // Experience bar
   const expY = barsStartY + barSpacing;
   ctx.fillStyle = theme.subtext;
   ctx.textAlign = 'left';
-  ctx.fillText('Experience', barsX, expY - 5);
+  ctx.fillText('experience', barsX, expY - 5);
   ctx.textAlign = 'right';
   const expText = `${Math.floor(Number(stats.exp))} / ${Number(stats.toNextLevel)}`;
   ctx.fillText(expText, barsX + barWidth, expY - 5);
@@ -127,7 +109,7 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   const manaY = barsStartY + (barSpacing * 2);
   ctx.fillStyle = theme.subtext;
   ctx.textAlign = 'left';
-  ctx.fillText('Mana', barsX, manaY - 5);
+  ctx.fillText('mana', barsX, manaY - 5);
   ctx.textAlign = 'right';
   const manaText = `${Math.floor(Number(stats.mp))} / ${Number(stats.maxMP)}`;
   ctx.fillText(manaText, barsX + barWidth, manaY - 5);
@@ -138,7 +120,7 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
 }
 
 function drawSimpleMessage(message: string, bgColor: string = '#2D1B47', textColor: string = 'white'): Buffer {
-  const canvas = createCanvas(600, 400);
+  const canvas = createCanvas(500, 300);
   const ctx = canvas.getContext('2d');
   
   // Configure canvas for better text rendering
@@ -147,11 +129,11 @@ function drawSimpleMessage(message: string, bgColor: string = '#2D1B47', textCol
   
   // Background
   ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, 600, 400);
+  ctx.fillRect(0, 0, 500, 300);
   
   // Text
   ctx.fillStyle = textColor;
-  ctx.font = '24px Arial, Helvetica, sans-serif';
+  ctx.font = '24px sans-serif mono';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(String(message), 300, 200);
@@ -198,12 +180,12 @@ export async function GET() {
       
       // Return a specific error image for API failures
       const errorMessage = apiError instanceof Error ? apiError.message : "Failed to fetch Habitica data";
-      const canvas = createCanvas(600, 400);
+      const canvas = createCanvas(500, 300);
       const ctx = canvas.getContext('2d');
       
       // Background
       ctx.fillStyle = '#2D1B47';
-      ctx.fillRect(0, 0, 600, 400);
+      ctx.fillRect(0, 0, 500, 300);
       
       // Configure canvas for better text rendering
       ctx.antialias = 'default';
@@ -211,18 +193,18 @@ export async function GET() {
       
       // Error text
       ctx.fillStyle = '#F74E52';
-      ctx.font = '24px Arial, Helvetica, sans-serif';
+      ctx.font = '24px sans-serif mono';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
       ctx.fillText('Configuration Error', 300, 150);
       
-      ctx.font = '14px Arial, Helvetica, sans-serif';
+      ctx.font = '14px sans-serif mono';
       ctx.fillStyle = 'white';
       // Simplified error message without complex wrapping
       const shortError = String(errorMessage).length > 50 ? String(errorMessage).substring(0, 50) + '...' : String(errorMessage);
       ctx.fillText(shortError, 300, 190);
       
-      ctx.font = '12px Arial, Helvetica, sans-serif';
+      ctx.font = '12px sans-serif mono';
       ctx.fillStyle = '#999';
       ctx.fillText('Please check environment variables', 300, 230);
       ctx.fillText('HABITICA_USER_ID & HABITICA_API_TOKEN', 300, 250);
