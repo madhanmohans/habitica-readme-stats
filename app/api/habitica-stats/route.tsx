@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { getHabiticaStats } from "../../actions/habitica";
 import { createCanvas, CanvasRenderingContext2D } from 'canvas';
 
@@ -56,6 +55,10 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   const canvas = createCanvas(600, 400);
   const ctx = canvas.getContext('2d');
   
+  // Configure canvas for better text rendering
+  ctx.antialias = 'default';
+  ctx.textDrawingMode = 'path';
+  
   // Background
   ctx.fillStyle = theme.background;
   ctx.fillRect(0, 0, 600, 400);
@@ -72,22 +75,22 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   
   // Game controller icon (text-based)
   ctx.fillStyle = 'white';
-  ctx.font = 'bold 20px sans-serif';
+  ctx.font = '20px Arial, Helvetica, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('GAME', avatarX, avatarY);
   
   // Character info - using only basic ASCII characters
   ctx.fillStyle = theme.text;
-  ctx.font = 'bold 28px sans-serif';
+  ctx.font = '28px Arial, Helvetica, sans-serif';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  const username = `${stats.class.toLowerCase()}`;
+  const username = String(stats.class).toLowerCase();
   ctx.fillText(username, avatarX + 50, avatarY - 10);
   
   ctx.fillStyle = theme.subtext;
-  ctx.font = '18px sans-serif';
-  const levelText = `Level ${stats.lvl} ${stats.class}`;
+  ctx.font = '18px Arial, Helvetica, sans-serif';
+  const levelText = `Level ${Number(stats.lvl)} ${String(stats.class)}`;
   ctx.fillText(levelText, avatarX + 50, avatarY + 15);
   
   // Progress bars
@@ -99,12 +102,12 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   
   // Health bar
   ctx.fillStyle = theme.subtext;
-  ctx.font = '14px sans-serif';
+  ctx.font = '14px Arial, Helvetica, sans-serif';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('Health', barsX, barsStartY - 5);
   ctx.textAlign = 'right';
-  const healthText = `${Math.floor(stats.hp)} / ${stats.maxHealth}`;
+  const healthText = `${Math.floor(Number(stats.hp))} / ${Number(stats.maxHealth)}`;
   ctx.fillText(healthText, barsX + barWidth, barsStartY - 5);
   
   drawProgressBar(ctx, barsX, barsStartY + 5, barWidth, barHeight, stats.hp, stats.maxHealth, '#F74E52', '#4D3B67');
@@ -115,7 +118,7 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   ctx.textAlign = 'left';
   ctx.fillText('Experience', barsX, expY - 5);
   ctx.textAlign = 'right';
-  const expText = `${Math.floor(stats.exp)} / ${stats.toNextLevel}`;
+  const expText = `${Math.floor(Number(stats.exp))} / ${Number(stats.toNextLevel)}`;
   ctx.fillText(expText, barsX + barWidth, expY - 5);
   
   drawProgressBar(ctx, barsX, expY + 5, barWidth, barHeight, stats.exp, stats.toNextLevel, '#FFB445', '#4D3B67');
@@ -126,7 +129,7 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   ctx.textAlign = 'left';
   ctx.fillText('Mana', barsX, manaY - 5);
   ctx.textAlign = 'right';
-  const manaText = `${Math.floor(stats.mp)} / ${stats.maxMP}`;
+  const manaText = `${Math.floor(Number(stats.mp))} / ${Number(stats.maxMP)}`;
   ctx.fillText(manaText, barsX + barWidth, manaY - 5);
   
   drawProgressBar(ctx, barsX, manaY + 5, barWidth, barHeight, stats.mp, stats.maxMP, '#50B5E9', '#4D3B67');
@@ -138,51 +141,28 @@ function drawSimpleMessage(message: string, bgColor: string = '#2D1B47', textCol
   const canvas = createCanvas(600, 400);
   const ctx = canvas.getContext('2d');
   
+  // Configure canvas for better text rendering
+  ctx.antialias = 'default';
+  ctx.textDrawingMode = 'path';
+  
   // Background
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, 600, 400);
   
   // Text
   ctx.fillStyle = textColor;
-  ctx.font = 'bold 24px sans-serif';
+  ctx.font = '24px Arial, Helvetica, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(message, 300, 200);
+  ctx.fillText(String(message), 300, 200);
   
   return canvas.toBuffer('image/png');
 }
 
-function drawDebugInfo(envStatus: { hasUserId: boolean; hasApiToken: boolean; runtime: string }): Buffer {
-  const canvas = createCanvas(600, 400);
-  const ctx = canvas.getContext('2d');
-  
-  // Background
-  ctx.fillStyle = '#2D1B47';
-  ctx.fillRect(0, 0, 600, 400);
-  
-  // Title
-  ctx.fillStyle = 'white';
-  ctx.font = 'bold 20px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Environment Variables Status', 300, 150);
-  
-  ctx.font = '16px sans-serif';
-  const userIdText = `User ID: ${envStatus.hasUserId ? 'Set' : 'Missing'}`;
-  ctx.fillText(userIdText, 300, 190);
-  
-  const tokenText = `API Token: ${envStatus.hasApiToken ? 'Set' : 'Missing'}`;
-  ctx.fillText(tokenText, 300, 220);
-  
-  const runtimeText = `Runtime: ${envStatus.runtime || 'local'}`;
-  ctx.fillText(runtimeText, 300, 250);
-  
-  return canvas.toBuffer('image/png');
-}
 
 export const runtime = "nodejs";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log('Habitica Stats API called');
     console.log('Environment variables check:', {
@@ -192,54 +172,8 @@ export async function GET(request: NextRequest) {
       runtime: process.env.VERCEL_ENV
     });
     
-    // Get theme from query parameters (only non-sensitive parameter allowed)
-    const { searchParams } = new URL(request.url);
-    const theme = searchParams.get('theme') || 'default';
-    
-    // Check for debug mode
-    const debug = searchParams.get('debug');
-    
-    // Test if basic function works
-    if (debug === 'test') {
-      return new Response(JSON.stringify({
-        status: 'API working',
-        runtime: 'nodejs',
-        hasUserId: !!process.env.HABITICA_USER_ID,
-        hasApiToken: !!process.env.HABITICA_API_TOKEN,
-        timestamp: new Date().toISOString()
-      }), {
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    
-    if (debug === 'simple') {
-      const imageBuffer = drawSimpleMessage('✅ Habitica Stats API is working!');
-      return new Response(new Uint8Array(imageBuffer), {
-        headers: {
-          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-          'Content-Type': 'image/png',
-          'X-Content-Type-Options': 'nosniff',
-          'Cross-Origin-Resource-Policy': 'cross-origin',
-        },
-      });
-    }
-
-    if (debug === 'env') {
-      const envStatus = {
-        hasUserId: !!process.env.HABITICA_USER_ID,
-        hasApiToken: !!process.env.HABITICA_API_TOKEN,
-        runtime: process.env.VERCEL_ENV || 'local'
-      };
-      const imageBuffer = drawDebugInfo(envStatus);
-      return new Response(new Uint8Array(imageBuffer), {
-        headers: {
-          'Cache-Control': 'public, max-age=300, s-maxage=300',
-          'Content-Type': 'image/png',
-          'X-Content-Type-Options': 'nosniff',
-          'Cross-Origin-Resource-Policy': 'cross-origin',
-        },
-      });
-    }
+    // Use static configuration to avoid dynamic server usage errors
+    const theme = 'default';
 
     // Securely fetch stats using environment variables
     let stats: HabiticaStats;
@@ -271,20 +205,24 @@ export async function GET(request: NextRequest) {
       ctx.fillStyle = '#2D1B47';
       ctx.fillRect(0, 0, 600, 400);
       
+      // Configure canvas for better text rendering
+      ctx.antialias = 'default';
+      ctx.textDrawingMode = 'path';
+      
       // Error text
       ctx.fillStyle = '#F74E52';
-      ctx.font = 'bold 24px sans-serif';
+      ctx.font = '24px Arial, Helvetica, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
       ctx.fillText('Configuration Error', 300, 150);
       
-      ctx.font = '14px sans-serif';
+      ctx.font = '14px Arial, Helvetica, sans-serif';
       ctx.fillStyle = 'white';
       // Simplified error message without complex wrapping
-      const shortError = errorMessage.length > 50 ? errorMessage.substring(0, 50) + '...' : errorMessage;
+      const shortError = String(errorMessage).length > 50 ? String(errorMessage).substring(0, 50) + '...' : String(errorMessage);
       ctx.fillText(shortError, 300, 190);
       
-      ctx.font = '12px sans-serif';
+      ctx.font = '12px Arial, Helvetica, sans-serif';
       ctx.fillStyle = '#999';
       ctx.fillText('Please check environment variables', 300, 230);
       ctx.fillText('HABITICA_USER_ID & HABITICA_API_TOKEN', 300, 250);
