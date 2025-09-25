@@ -34,6 +34,19 @@ export async function GET(request: NextRequest) {
     // Check for debug mode
     const debug = searchParams.get('debug');
     
+    // Test if basic function works
+    if (debug === 'test') {
+      return new Response(JSON.stringify({
+        status: 'API working',
+        runtime: 'nodejs',
+        hasUserId: !!process.env.HABITICA_USER_ID,
+        hasApiToken: !!process.env.HABITICA_API_TOKEN,
+        timestamp: new Date().toISOString()
+      }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
     if (debug === 'simple') {
       return new ImageResponse(
         (
