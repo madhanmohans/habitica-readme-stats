@@ -82,7 +82,7 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   const barWidth = 320;
   const barSpacing = 45;
   const barsX = (500 - barWidth) / 2;
-  
+
   // Health bar
   ctx.fillStyle = theme.subtext;
   ctx.font = '14px sans-serif mono';
