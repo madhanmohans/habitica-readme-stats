@@ -16,6 +16,14 @@ interface HabiticaStats {
 
 export async function getHabiticaStats(): Promise<HabiticaStats> {
   try {
+    // Debug logging for environment variables
+    console.log('Environment check:', {
+      hasUserId: !!process.env.HABITICA_USER_ID,
+      hasApiToken: !!process.env.HABITICA_API_TOKEN,
+      userIdPrefix: process.env.HABITICA_USER_ID?.substring(0, 8) + '...',
+      runtime: process.env.NEXT_RUNTIME || 'nodejs'
+    });
+    
     // Check if environment variables are set
     if (!process.env.HABITICA_USER_ID || !process.env.HABITICA_API_TOKEN) {
       throw new Error(
