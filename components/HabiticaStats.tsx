@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getHabiticaStats } from "../app/actions/habitica";
 
 interface HabiticaStats {
   hp: number;
@@ -19,14 +18,42 @@ export function HabiticaStats() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stats, setStats] = useState<HabiticaStats | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
-    getHabiticaStats()
-      .then(setStats)
-      .catch((err) => {
-        console.error("Error fetching Habitica stats:", err);
-        setError("Failed to load Habitica stats. Please try again later.");
-      });
+    const eventSource = new EventSource("/api/habitica-stats-stream");
+
+    eventSource.addEventListener("stats", (event) => {
+      try {
+        const data = JSON.parse(event.data) as HabiticaStats;
+        setStats(data);
+        setError(null);
+        setLastUpdated(new Date());
+      } catch (err) {
+        console.error("Error parsing SSE stats:", err);
+      }
+    });
+
+    eventSource.addEventListener("error", (event) => {
+      // SSE custom "error" event from server
+      if (event instanceof MessageEvent) {
+        try {
+          const data = JSON.parse(event.data);
+          setError(data.message || "Unknown error from server");
+        } catch {
+          setError("Failed to parse error from server");
+        }
+      }
+    });
+
+    eventSource.onerror = () => {
+      // Browser-level connection error — EventSource reconnects automatically
+      console.warn("SSE connection lost, reconnecting…");
+    };
+
+    return () => {
+      eventSource.close();
+    };
   }, []);
 
   useEffect(() => {
