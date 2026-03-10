@@ -1,5 +1,20 @@
 import { getHabiticaStats } from "../../actions/habitica";
-import { createCanvas, CanvasRenderingContext2D } from 'canvas';
+import { createCanvas, registerFont, CanvasRenderingContext2D } from 'canvas';
+import path from 'path';
+
+// Register bundled Geist fonts so they are available in node-canvas
+// These fonts ship with the project and work reliably on Vercel
+const fontsDir = path.join(process.cwd(), 'app', 'fonts');
+try {
+  registerFont(path.join(fontsDir, 'GeistVF.woff'), { family: 'Geist', weight: '400' });
+  registerFont(path.join(fontsDir, 'GeistMonoVF.woff'), { family: 'GeistMono', weight: '400' });
+} catch {
+  // Fonts may already be registered or path may differ in build — silently continue
+}
+
+// Fallback font stack: try Geist first, then common system fonts
+const FONT_SANS = 'Geist, Arial, Helvetica, sans-serif';
+const FONT_MONO = 'GeistMono, "Courier New", monospace';
 
 interface HabiticaStats {
   hp: number;
@@ -63,7 +78,7 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
   const avatarY = 50;
   
   ctx.fillStyle = theme.text;
-  ctx.font = '24px sans-serif mono';
+  ctx.font = `bold 24px ${FONT_SANS}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const username = String(stats.class);
@@ -79,7 +94,7 @@ function drawStatsCard(stats: HabiticaStats, theme: Theme): Buffer {
 
   // Health bar
   ctx.fillStyle = theme.subtext;
-  ctx.font = '14px sans-serif mono';
+  ctx.font = `14px ${FONT_SANS}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('health', barsX, barsStartY - 5);
@@ -122,17 +137,17 @@ function drawErrorCard(message: string): Buffer {
   ctx.fillRect(0, 0, 500, 300);
   
   ctx.fillStyle = '#F74E52';
-  ctx.font = '24px sans-serif mono';
+  ctx.font = `bold 24px ${FONT_SANS}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('Configuration Error', 250, 130);
   
-  ctx.font = '14px sans-serif mono';
+  ctx.font = `14px ${FONT_SANS}`;
   ctx.fillStyle = 'white';
   const shortError = message.length > 50 ? message.substring(0, 50) + '...' : message;
   ctx.fillText(shortError, 250, 170);
   
-  ctx.font = '12px sans-serif mono';
+  ctx.font = `12px ${FONT_SANS}`;
   ctx.fillStyle = '#999';
   ctx.fillText('Please check environment variables', 250, 210);
   ctx.fillText('HABITICA_USER_ID & HABITICA_API_TOKEN', 250, 230);
